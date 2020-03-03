@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,15 +11,15 @@ import (
 )
 
 type Config struct {
-	LauncherItemList []LauncherItem `yaml:"items"`
+	ItemList []Item `yaml:"items"`
 }
 
-type LauncherItem struct {
+type Item struct {
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
 }
 
-func save(li *LauncherItem) error {
+func save(li *Item) error {
 	filename := li.Title + ".yaml"
 	return ioutil.WriteFile(filename, []byte(li.Description), 0600)
 }
@@ -40,15 +41,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("failed to load config ", err)
 	}
 
-	for _, s := range cfg.LauncherItemList {
+	for _, s := range cfg.ItemList {
 		fmt.Println("\n++++ Title = ", s.Title)
 	}
 
-	// tmpl, err := template.ParseFiles("templates/view.html")
+	tmpl, err := template.ParseFiles("templates/view.html")
+	tmpl.Execute(w, cfg)
 
-	// tmpl.Execute(w, cfg.LauncherItemList)
-
-	fmt.Fprint(w, "Hello world!", cfg)
+	// fmt.Fprint(w, "Config %S", reflect.TypeOf(cfg).String())
 }
 
 func main() {
