@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 
 	"gopkg.in/yaml.v2"
 )
@@ -34,6 +35,25 @@ func load_config(file string) (conf *Config, err error) {
 	return
 }
 
+func launch_app(app string, args ...string) {
+
+	mCmd := exec.Command(app)
+
+	mCmdIn, _ := mCmd.StdinPipe()
+	mCmdOut, _ := mCmd.StdoutPipe()
+
+	mCmd.Start()
+
+	mCmdIn.Close()
+	outputBytes, _ := ioutil.ReadAll(mCmdOut)
+	mCmd.Wait()
+
+	_ = outputBytes
+	_ = mCmdIn
+	_ = mCmdOut
+
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	cfg, err := load_config("data/items.yml")
@@ -54,6 +74,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	fmt.Printf("GIL Launcher\n")
+
+	launch_app("firefox", "--kiosk", "http://localhost:8080")
 
 	http.HandleFunc("/", handler)
 
