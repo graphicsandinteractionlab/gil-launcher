@@ -1,12 +1,16 @@
+title: Graphics and Interaction Lab
+
 items:
-  - title: SuperDuper
-    enable: false
-    description: A very nice tool! Suprisingly not working
+  - title: Going Balooney
+    enable: true
+    description: A truely puzzling experience where you floating away
     authors: 
      - Hans Hansen
-
-
-
+     - Irma Ibenbrock
+     - Jochen Joachimsen
+    command: qtcreator
+     
+# test
   - title: OtherTool
-    enable: true
+    enable: false
     description : Very other tool Mehhhh

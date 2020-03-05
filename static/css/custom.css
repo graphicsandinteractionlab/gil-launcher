@@ -1,0 +1,13 @@
+
+.bg-image {
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-image: url("../img/gil-background.jpg");
+}
+
+.play-button {
+    float: right;
+    align-content: flex-end;
+    vertical-align: middle;
+}

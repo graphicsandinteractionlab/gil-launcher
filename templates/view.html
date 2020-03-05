@@ -6,26 +6,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="stylesheet" href="static/css/mini-default.min.css">
-  <title>Ein Titel</title>
+  <link rel="stylesheet" href="static/css/custom.css">
+  <title>{{.Title}}</title>
 </head>
 
-<body>
-<div class="container">
-  {{range .ItemList}}
+<body class="bg-image">
+
+  <div class="container">
+    {{range .ItemList}}
+    {{if .Enable}}
     <div class="row">
       <div class="col-sm-12">
         <div class="card fluid">
           <div class="section dark double-padded">
-            <h3>{{.Title}}</h3>
+            <h3>{{.Title}}<a href="/launch?id={{.Id}}"><img class="play-button" width="18pt" height="18pt" src="static/img/play-solid.svg" /></a></h3>
           </div>
           <div class="section">
             <p>{{.Description}}</p>
-          </div>  
-        </div>          
+          </div>
+          <div class="section">
+            {{range .Authors}}
+            {{.}},
+            {{end}}
+          </div>
+        </div>
       </div>
     </div>
     {{end}}
-</div>
+    {{end}}
+  </div>
+<!-- 
+  <footer class="sticky">
+    <p>&copy; 2020 Hartmut Seichter</p>
+  </footer> -->
 
 </body>
 
