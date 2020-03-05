@@ -1,6 +1,9 @@
+# just a title being used
 title: Graphics and Interaction Lab
 
+# launcher items
 items:
+  # item one ...
   - title: Going Balooney
     enable: true
     description: A truely puzzling experience where you floating away
@@ -9,8 +12,10 @@ items:
      - Irma Ibenbrock
      - Jochen Joachimsen
     command: qtcreator
+    ignoreon:
+      - ips200
      
-# test
+  # another item
   - title: OtherTool
     enable: false
     description : Very other tool Mehhhh
