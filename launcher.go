@@ -51,31 +51,6 @@ func load_config(file string) (err error) {
 	return
 }
 
-// func launch_app(app string, args ...string) {
-
-// 	mCmd := exec.Command(app, args...)
-
-// 	// mCmdIn, _ := mCmd.StdinPipe()
-// 	// mCmdOut, _ := mCmd.StdoutPipe()
-
-// 	mCmd.Start()
-
-// 	fmt.Println(mCmd.Process)
-
-// 	// mCmd.Process.Kill()
-
-// 	// mCmdIn.Close()
-// 	// outputBytes, _ := ioutil.ReadAll(mCmdOut)
-// 	// mCmd.Wait()
-
-// 	// // fmt.Println()
-
-// 	// _ = outputBytes
-// 	// _ = mCmdIn
-// 	// _ = mCmdOut
-
-// }
-
 func kill_handler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
@@ -112,10 +87,6 @@ func launch_handler(w http.ResponseWriter, r *http.Request) {
 
 		idx, err := strconv.ParseInt(q["id"][0], 10, 64)
 
-		// fmt.Println(cfg.ItemList[idx])
-
-		// launch_app(cfg.ItemList[idx].Command)
-
 		commandline := globalConfig.ItemList[idx].Command
 
 		globalConfig.ItemList[idx].Handle = exec.Command(commandline)
@@ -138,7 +109,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl.Execute(w, globalConfig)
 
-	// fmt.Fprint(w, "Config %S", reflect.TypeOf(cfg).String())
 }
 
 func main() {
@@ -147,8 +117,6 @@ func main() {
 	if err != nil {
 		fmt.Println("failed to load config ", err)
 	}
-
-	// launch_app("firefox", "--kiosk", "http://localhost:8181")
 
 	fs := http.FileServer(http.Dir("static/"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
