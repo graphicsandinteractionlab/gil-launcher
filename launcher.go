@@ -16,6 +16,7 @@ type Config struct {
 }
 
 type Item struct {
+	Enable      bool   `yaml:"enable"`
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
 }
@@ -37,7 +38,7 @@ func load_config(file string) (conf *Config, err error) {
 
 func launch_app(app string, args ...string) {
 
-	mCmd := exec.Command(app)
+	mCmd := exec.Command(app, args...)
 
 	mCmdIn, _ := mCmd.StdinPipe()
 	mCmdOut, _ := mCmd.StdoutPipe()
@@ -47,6 +48,8 @@ func launch_app(app string, args ...string) {
 	mCmdIn.Close()
 	outputBytes, _ := ioutil.ReadAll(mCmdOut)
 	mCmd.Wait()
+
+	// fmt.Println()
 
 	_ = outputBytes
 	_ = mCmdIn
@@ -60,11 +63,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("failed to load config ", err)
 	}
-
-	for _, s := range cfg.ItemList {
-		fmt.Println("\n++++ Title = ", s.Title)
-	}
-
 	tmpl, err := template.ParseFiles("templates/view.html")
 	tmpl.Execute(w, cfg)
 
@@ -73,15 +71,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	fmt.Printf("GIL Launcher\n")
-
-	launch_app("firefox", "--kiosk", "http://localhost:8080")
-
-	http.HandleFunc("/", handler)
+	launch_app("firefox", "--kiosk", "http://localhost:8181")
 
 	fs := http.FileServer(http.Dir("static/"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/", handler)
+
+	log.Fatal(http.ListenAndServe(":8181", nil))
 
 }

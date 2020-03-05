@@ -1,5 +1,12 @@
 items:
-  - title : "SuperDuper"
-    description : "Some stuff to say"
-  - title : "OtherTool"
-    description : "Mehhhh"
+  - title: SuperDuper
+    enable: false
+    description: A very nice tool! Suprisingly not working
+    authors: 
+     - Hans Hansen
+
+
+
+  - title: OtherTool
+    enable: true
+    description : Very other tool Mehhhh
