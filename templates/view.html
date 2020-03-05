@@ -11,12 +11,8 @@
 </head>
 
 <body class="bg-image">
-
   <header class="sticky"><img class="logo" src="static/img/logo.png" alt="{{.Title}}"></header>
-
-
   <div class="container">
-
     {{range .ItemList}}
     {{if .Enable}}
     <div class="row">
@@ -24,6 +20,8 @@
         <div class="card fluid">
           <div class="section dark">
             {{if .Handle}}
+            <h3>{{.Title}}<a href="/kill?id={{.Id}}"><img class="play-button" width="18pt" height="18pt"
+              src="static/img/stop-solid.svg" /></a></h3>
             {{else}}
             <h3>{{.Title}}<a href="/launch?id={{.Id}}"><img class="play-button" width="18pt" height="18pt"
                   src="static/img/play-solid.svg" /></a></h3>

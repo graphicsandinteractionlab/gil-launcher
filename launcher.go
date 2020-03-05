@@ -28,21 +28,23 @@ type Item struct {
 	Id          int
 }
 
+var globalConfig = &Config{}
+
 func save(li *Item) error {
 	filename := li.Title + ".yaml"
 	return ioutil.WriteFile(filename, []byte(li.Description), 0600)
 }
 
-func load_config(file string) (conf *Config, err error) {
+func load_config(file string) (err error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return
 	}
-	conf = &Config{}
-	err = yaml.Unmarshal(data, conf)
+
+	err = yaml.Unmarshal(data, globalConfig)
 
 	// compute hashes for launch id:
-	for i, item := range conf.ItemList {
+	for i, item := range globalConfig.ItemList {
 		item.Id = i
 	}
 
@@ -74,12 +76,31 @@ func load_config(file string) (conf *Config, err error) {
 
 // }
 
-func launch_handler(w http.ResponseWriter, r *http.Request) {
+func kill_handler(w http.ResponseWriter, r *http.Request) {
 
-	cfg, err := load_config("data/items.yml")
-	if err != nil {
-		fmt.Println("failed to load config ", err)
+	if r.Method == "GET" {
+		u, err := url.Parse(r.URL.String())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		q := u.Query()
+
+		idx, err := strconv.ParseInt(q["id"][0], 10, 64)
+
+		err = globalConfig.ItemList[idx].Handle.Process.Kill()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		globalConfig.ItemList[idx].Handle = nil
 	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func launch_handler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		u, err := url.Parse(r.URL.String())
@@ -95,11 +116,11 @@ func launch_handler(w http.ResponseWriter, r *http.Request) {
 
 		// launch_app(cfg.ItemList[idx].Command)
 
-		commandline := cfg.ItemList[idx].Command
+		commandline := globalConfig.ItemList[idx].Command
 
-		cfg.ItemList[idx].Handle = exec.Command(commandline)
+		globalConfig.ItemList[idx].Handle = exec.Command(commandline)
 
-		cfg.ItemList[idx].Handle.Start()
+		globalConfig.ItemList[idx].Handle.Start()
 
 	}
 
@@ -113,18 +134,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 
-	cfg, err := load_config("data/items.yml")
-	if err != nil {
-		fmt.Println("failed to load config ", err)
-	}
+	tmpl, _ := template.ParseFiles("templates/view.html")
 
-	tmpl, err := template.ParseFiles("templates/view.html")
-	tmpl.Execute(w, cfg)
+	tmpl.Execute(w, globalConfig)
 
 	// fmt.Fprint(w, "Config %S", reflect.TypeOf(cfg).String())
 }
 
 func main() {
+
+	err := load_config("data/items.yml")
+	if err != nil {
+		fmt.Println("failed to load config ", err)
+	}
 
 	// launch_app("firefox", "--kiosk", "http://localhost:8181")
 
@@ -133,6 +155,7 @@ func main() {
 
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/launch", launch_handler)
+	http.HandleFunc("/kill", kill_handler)
 
 	log.Fatal(http.ListenAndServe(":8181", nil))
 
