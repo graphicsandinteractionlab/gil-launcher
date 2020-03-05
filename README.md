@@ -17,4 +17,4 @@ This software is licensed under the terms of the MIT License. Please consult LIC
 
 ## Copyright
 
-&copy; Copyright 2020 [Hartmut Seichter)(https://technotecture.com)
+&copy; Copyright 2020 [Hartmut Seichter](https://technotecture.com)
