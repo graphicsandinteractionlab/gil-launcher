@@ -6,6 +6,15 @@
     background-image: url("../img/gil-background.jpg");
 }
 
+
+.logo {
+    display: block;
+    width: 60px;
+    height: 40px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .play-button {
     float: right;
     align-content: flex-end;

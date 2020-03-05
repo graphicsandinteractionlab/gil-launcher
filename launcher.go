@@ -24,6 +24,7 @@ type Item struct {
 	Description string   `yaml:"description"`
 	Authors     []string `yaml:"authors"`
 	Command     string   `yaml:"command"`
+	Handle      *exec.Cmd
 	Id          int
 }
 
@@ -48,26 +49,30 @@ func load_config(file string) (conf *Config, err error) {
 	return
 }
 
-func launch_app(app string, args ...string) {
+// func launch_app(app string, args ...string) {
 
-	mCmd := exec.Command(app, args...)
+// 	mCmd := exec.Command(app, args...)
 
-	// mCmdIn, _ := mCmd.StdinPipe()
-	// mCmdOut, _ := mCmd.StdoutPipe()
+// 	// mCmdIn, _ := mCmd.StdinPipe()
+// 	// mCmdOut, _ := mCmd.StdoutPipe()
 
-	mCmd.Start()
+// 	mCmd.Start()
 
-	// mCmdIn.Close()
-	// outputBytes, _ := ioutil.ReadAll(mCmdOut)
-	// mCmd.Wait()
+// 	fmt.Println(mCmd.Process)
 
-	// // fmt.Println()
+// 	// mCmd.Process.Kill()
 
-	// _ = outputBytes
-	// _ = mCmdIn
-	// _ = mCmdOut
+// 	// mCmdIn.Close()
+// 	// outputBytes, _ := ioutil.ReadAll(mCmdOut)
+// 	// mCmd.Wait()
 
-}
+// 	// // fmt.Println()
+
+// 	// _ = outputBytes
+// 	// _ = mCmdIn
+// 	// _ = mCmdOut
+
+// }
 
 func launch_handler(w http.ResponseWriter, r *http.Request) {
 
@@ -81,13 +86,21 @@ func launch_handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		q := u.Query()
 
 		idx, err := strconv.ParseInt(q["id"][0], 10, 64)
 
 		// fmt.Println(cfg.ItemList[idx])
 
-		launch_app(cfg.ItemList[idx].Command)
+		// launch_app(cfg.ItemList[idx].Command)
+
+		commandline := cfg.ItemList[idx].Command
+
+		cfg.ItemList[idx].Handle = exec.Command(commandline)
+
+		cfg.ItemList[idx].Handle.Start()
+
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
