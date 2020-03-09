@@ -18,6 +18,7 @@ type Config struct {
 	Title    string `yaml:"title"`
 	Port     int    `yaml:"port"`
 	ItemList []Item `yaml:"items"`
+	Directories []string `yaml:"directories"`
 }
 
 type Item struct {
@@ -128,7 +129,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/view.html")
 
 	tmpl.Execute(w, globalConfig)
-
 }
 
 func main() {
@@ -140,9 +140,11 @@ func main() {
 	}
 
 	// now search subdirectories
-	launcherFiles, _ := filepath.Glob("data/*/gillaunch.yml")
-	for _, item := range launcherFiles {
-		loadLauncher(item)
+	for _,dir := range globalConfig.Directories {
+		launcherFiles, _ := filepath.Glob(dir + "/*/gillaunch.yml")
+		for _, item := range launcherFiles {
+			loadLauncher(item)
+		}	
 	}
 
 	// update IDs

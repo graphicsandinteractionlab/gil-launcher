@@ -1,6 +1,9 @@
 # just a title being used
 title: Graphics and Interaction Lab
 port: 8080
+directories:
+ - data
+ - V:
 
 
 # launcher items
