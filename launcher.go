@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 
 	"gopkg.in/yaml.v2"
@@ -15,17 +16,18 @@ import (
 
 type Config struct {
 	Title    string `yaml:"title"`
+	Port     int    `yaml:"port"`
 	ItemList []Item `yaml:"items"`
 }
 
 type Item struct {
-	Enable      bool     `yaml:"enable"`
 	Title       string   `yaml:"title"`
+	Enable      bool     `yaml:"enable"`
 	Description string   `yaml:"description"`
 	Authors     []string `yaml:"authors"`
 	Command     string   `yaml:"command"`
 	Handle      *exec.Cmd
-	Id          int
+	ID          int
 }
 
 var globalConfig = &Config{}
@@ -35,23 +37,41 @@ func save(li *Item) error {
 	return ioutil.WriteFile(filename, []byte(li.Description), 0600)
 }
 
-func load_config(file string) (err error) {
+func loadGlobalConfig(file string) (err error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return
 	}
 
 	err = yaml.Unmarshal(data, globalConfig)
-
-	// compute hashes for launch id:
-	for i, item := range globalConfig.ItemList {
-		item.Id = i
-	}
-
 	return
 }
 
-func kill_handler(w http.ResponseWriter, r *http.Request) {
+func updateLauncherItems() {
+
+	// compute hashes for launch id:
+	for i := range globalConfig.ItemList {
+		fmt.Println(i)
+		globalConfig.ItemList[i].ID = i
+	}
+}
+
+func loadLauncher(file string) (err error) {
+
+	item := &Item{}
+
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return
+	}
+	err = yaml.Unmarshal(data, item)
+
+	globalConfig.ItemList = append(globalConfig.ItemList, *item)
+
+	return nil
+}
+
+func killHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		u, err := url.Parse(r.URL.String())
@@ -75,7 +95,7 @@ func kill_handler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func launch_handler(w http.ResponseWriter, r *http.Request) {
+func launchHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		u, err := url.Parse(r.URL.String())
@@ -113,17 +133,33 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	err := load_config("data/items.yml")
+	// load global config
+	err := loadGlobalConfig("data/items.yml")
 	if err != nil {
 		fmt.Println("failed to load config ", err)
 	}
 
+	// now search subdirectories
+	launcherFiles, _ := filepath.Glob("data/*/gillaunch.yml")
+	for _, item := range launcherFiles {
+		loadLauncher(item)
+	}
+
+	// update IDs
+	updateLauncherItems()
+
+	for _, item := range globalConfig.ItemList {
+		fmt.Println("--")
+		fmt.Println(item)
+	}
+
+	// hoist server
 	fs := http.FileServer(http.Dir("static/"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	http.HandleFunc("/", handler)
-	http.HandleFunc("/launch", launch_handler)
-	http.HandleFunc("/kill", kill_handler)
+	http.HandleFunc("/launch", launchHandler)
+	http.HandleFunc("/kill", killHandler)
 
 	log.Fatal(http.ListenAndServe(":8181", nil))
 
