@@ -11,7 +11,7 @@
 </head>
 
 <body class="bg-image">
-  <header class="sticky"><a href="#"><img class="logo" src="static/img/logo.png" alt="{{.Title}}"></a></header>
+  <header class="sticky"><a href="/reload"><img class="logo" src="static/img/logo.png" alt="{{.Title}}"></a></header>
   <div class="container">
     {{range .ItemList}}
     {{if .Enable}}
@@ -20,7 +20,7 @@
         <div class="card fluid">
           <div class="section dark">
             {{if .Handle}}
-            <h3>{{.Title}}<a href="/kill?id={{.Id}}"><img class="play-button" width="18pt" height="18pt"
+            <h3>{{.Title}}<a href="/kill?id={{.ID}}"><img class="play-button" width="18pt" height="18pt"
               src="static/img/stop-solid.svg" /></a></h3>
             {{else}}
             <h3>{{.Title}}<a href="/launch?id={{.ID}}"><img class="play-button" width="18pt" height="18pt"

@@ -15,9 +15,9 @@ import (
 )
 
 type Config struct {
-	Title    string `yaml:"title"`
-	Port     int    `yaml:"port"`
-	ItemList []Item `yaml:"items"`
+	Title       string   `yaml:"title"`
+	Port        int      `yaml:"port"`
+	ItemList    []Item   `yaml:"items"`
 	Directories []string `yaml:"directories"`
 }
 
@@ -70,6 +70,34 @@ func loadLauncher(file string) (err error) {
 	globalConfig.ItemList = append(globalConfig.ItemList, *item)
 
 	return nil
+}
+
+func loadBootStrap() {
+
+	// load global config
+	err := loadGlobalConfig("data/items.yml")
+	if err != nil {
+		fmt.Println("failed to load config ", err)
+	}
+
+	// now search subdirectories
+	for _, dir := range globalConfig.Directories {
+		launcherFiles, _ := filepath.Glob(dir + "/*/gillaunch.yml")
+		for _, item := range launcherFiles {
+			loadLauncher(item)
+		}
+	}
+
+	// update IDs
+	updateLauncherItems()
+
+}
+
+func reloadHandler(w http.ResponseWriter, r *http.Request) {
+
+	loadBootStrap()
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func killHandler(w http.ResponseWriter, r *http.Request) {
@@ -133,36 +161,22 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	// load global config
-	err := loadGlobalConfig("data/items.yml")
-	if err != nil {
-		fmt.Println("failed to load config ", err)
-	}
-
-	// now search subdirectories
-	for _,dir := range globalConfig.Directories {
-		launcherFiles, _ := filepath.Glob(dir + "/*/gillaunch.yml")
-		for _, item := range launcherFiles {
-			loadLauncher(item)
-		}	
-	}
-
-	// update IDs
-	updateLauncherItems()
-
-	for _, item := range globalConfig.ItemList {
-		fmt.Println("--")
-		fmt.Println(item)
-	}
+	// load everything
+	loadBootStrap()
 
 	// hoist server
 	fs := http.FileServer(http.Dir("static/"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
+	// http handler
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/launch", launchHandler)
 	http.HandleFunc("/kill", killHandler)
+	http.HandleFunc("/reload", reloadHandler)
 
-	log.Fatal(http.ListenAndServe(":8181", nil))
+	// start stuff
+	port := strconv.Itoa(globalConfig.Port)
+
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 
 }
