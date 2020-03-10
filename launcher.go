@@ -21,12 +21,15 @@ type Config struct {
 	Directories []string `yaml:"directories"`
 }
 
+// structure to hold each launcher item
 type Item struct {
 	Title       string   `yaml:"title"`
 	Enable      bool     `yaml:"enable"`
 	Description string   `yaml:"description"`
 	Authors     []string `yaml:"authors"`
 	Command     string   `yaml:"command"`
+	Hosts       []string `yaml:"hosts"`
+	LocalDir    string
 	Handle      *exec.Cmd
 	ID          int
 }
@@ -48,6 +51,11 @@ func loadGlobalConfig(file string) (err error) {
 	}
 
 	err = yaml.Unmarshal(data, globalConfig)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return
 }
 
@@ -55,7 +63,6 @@ func updateLauncherItems() {
 
 	// compute hashes for launch id:
 	for i := range globalConfig.ItemList {
-		fmt.Println(i)
 		globalConfig.ItemList[i].ID = i
 	}
 }
@@ -69,6 +76,12 @@ func loadLauncher(file string) (err error) {
 		return
 	}
 	err = yaml.Unmarshal(data, item)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	item.LocalDir = filepath.Dir(file)
 
 	globalConfig.ItemList = append(globalConfig.ItemList, *item)
 
@@ -87,7 +100,8 @@ func loadBootStrap() {
 	for _, dir := range globalConfig.Directories {
 		launcherFiles, _ := filepath.Glob(dir + "/*/gillaunch.yml")
 		for _, item := range launcherFiles {
-			loadLauncher(item)
+			path, _ := filepath.Abs(item)
+			loadLauncher(path)
 		}
 	}
 
@@ -127,6 +141,15 @@ func killHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func (item *Item) launch() {
+
+	fullCommand := item.LocalDir + item.Command
+
+	item.Handle = exec.Command(fullCommand)
+
+	item.Handle.Start()
+}
+
 func launchHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
@@ -139,11 +162,7 @@ func launchHandler(w http.ResponseWriter, r *http.Request) {
 
 		idx, err := strconv.ParseInt(q["id"][0], 10, 64)
 
-		commandline := globalConfig.ItemList[idx].Command
-
-		globalConfig.ItemList[idx].Handle = exec.Command(commandline)
-
-		globalConfig.ItemList[idx].Handle.Start()
+		globalConfig.ItemList[idx].launch()
 
 	}
 
