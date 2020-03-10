@@ -4,8 +4,7 @@ port: 8080
 
 directories:
  - data
- - V:
-
+ - 'v:'
 
 # launcher items
 items:

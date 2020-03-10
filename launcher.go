@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -98,12 +99,37 @@ func loadBootStrap() {
 
 	// now search subdirectories
 	for _, dir := range globalConfig.Directories {
-		launcherFiles, _ := filepath.Glob(dir + "/*/gillaunch.yml")
-		for _, item := range launcherFiles {
-			path, _ := filepath.Abs(item)
-			loadLauncher(path)
+
+		fmt.Println(dir)
+
+		err := filepath.Walk(dir,
+			func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				matched, _ := filepath.Match("*/gillaunch.yml", path)
+				if matched {
+					loadLauncher(path)
+					fmt.Println(path, info.Size())
+				}
+				return nil
+			})
+
+		if err != nil {
+			log.Println(err)
 		}
 	}
+	// searchDir := path.Join(dir, "*", "gillaunch.yml")
+
+	// fmt.Println(`searching `, searchDir)
+
+	// launcherFiles, _ := filepath.Glob(searchDir)
+	// for _, item := range launcherFiles {
+	// 	fmt.Println(`found\t`, item)
+	// 	path, _ := filepath.Abs(item)
+	// 	loadLauncher(path)
+	// }
+	// }
 
 	// update IDs
 	updateLauncherItems()
