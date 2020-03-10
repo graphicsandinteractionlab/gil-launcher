@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strconv"
 
@@ -107,7 +108,8 @@ func loadBootStrap() {
 				if err != nil {
 					return err
 				}
-				matched, _ := filepath.Match("*/gillaunch.yml", path)
+				matched, _ := filepath.Match("gillaunch.yml", filepath.Base(path))
+				fmt.Println(path, matched)
 				if matched {
 					loadLauncher(path)
 					fmt.Println(path, info.Size())
@@ -119,18 +121,6 @@ func loadBootStrap() {
 			log.Println(err)
 		}
 	}
-	// searchDir := path.Join(dir, "*", "gillaunch.yml")
-
-	// fmt.Println(`searching `, searchDir)
-
-	// launcherFiles, _ := filepath.Glob(searchDir)
-	// for _, item := range launcherFiles {
-	// 	fmt.Println(`found\t`, item)
-	// 	path, _ := filepath.Abs(item)
-	// 	loadLauncher(path)
-	// }
-	// }
-
 	// update IDs
 	updateLauncherItems()
 
@@ -155,7 +145,11 @@ func killHandler(w http.ResponseWriter, r *http.Request) {
 
 		idx, err := strconv.ParseInt(q["id"][0], 10, 64)
 
-		err = globalConfig.ItemList[idx].Handle.Process.Kill()
+		if err != nil {
+			if globalConfig.ItemList[idx].Handle != nil && globalConfig.ItemList[idx].Handle.Process != nil {
+				err = globalConfig.ItemList[idx].Handle.Process.Kill()
+			}
+		}
 
 		if err != nil {
 			log.Fatal(err)
@@ -169,7 +163,9 @@ func killHandler(w http.ResponseWriter, r *http.Request) {
 
 func (item *Item) launch() {
 
-	fullCommand := item.LocalDir + item.Command
+	fullCommand := path.Join(item.LocalDir, item.Command)
+
+	fmt.Println("launching ", fullCommand)
 
 	item.Handle = exec.Command(fullCommand)
 
