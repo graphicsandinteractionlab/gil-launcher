@@ -31,7 +31,7 @@ type Item struct {
 	ID          int
 }
 
-var globalConfig = &Config{}
+var globalConfig *Config
 
 func save(li *Item) error {
 	filename := li.Title + ".yaml"
@@ -39,6 +39,9 @@ func save(li *Item) error {
 }
 
 func loadGlobalConfig(file string) (err error) {
+
+	globalConfig = &Config{}
+
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return
