@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"strconv"
 
@@ -75,12 +74,13 @@ func loadLauncher(file string) (err error) {
 
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 	err = yaml.Unmarshal(data, item)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	item.LocalDir = filepath.Dir(file)
@@ -109,7 +109,7 @@ func loadBootStrap() {
 					return err
 				}
 				matched, _ := filepath.Match("gillaunch.yml", filepath.Base(path))
-				fmt.Println(path, matched)
+				// fmt.Println(path, matched)
 				if matched {
 					loadLauncher(path)
 					fmt.Println(path, info.Size())
@@ -163,13 +163,30 @@ func killHandler(w http.ResponseWriter, r *http.Request) {
 
 func (item *Item) launch() {
 
-	fullCommand := path.Join(item.LocalDir, item.Command)
+	oldWd, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
 
-	fmt.Println("launching ", fullCommand)
+	err = os.Chdir(item.LocalDir)
+	if err != nil {
+		log.Println(err)
+	}
 
+	fullCommand := filepath.Join(item.LocalDir, item.Command)
 	item.Handle = exec.Command(fullCommand)
+	item.Handle.Dir = item.LocalDir
 
-	item.Handle.Start()
+	err = item.Handle.Start()
+	if err != nil {
+		log.Println(err)
+	}
+
+	err = os.Chdir(oldWd)
+	if err != nil {
+		log.Println(err)
+	}
+
 }
 
 func launchHandler(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +220,19 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, globalConfig)
 }
 
+// func doTesting() {
+// 	cmd := exec.Command("Z:\\SnoozingAway\\results\\Snoozer\\SnozzingAway.exe")
+
+// 	err := cmd.Start()
+
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
+// }
+
 func main() {
+
+	// doTesting()
 
 	// load everything
 	loadBootStrap()
